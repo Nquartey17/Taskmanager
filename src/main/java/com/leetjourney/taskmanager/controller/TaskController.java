@@ -21,6 +21,7 @@ public class TaskController {
         return tasks;
     }
 
+    // @PathVariable means "get a value from the URL path and give it to my Java method."
     @GetMapping("/{id}")
     public Task getTaskById(@PathVariable Long id) {
         // Using stream to find task or return null
@@ -39,4 +40,27 @@ public class TaskController {
 
         return task;
     }
+
+    // Update
+    @PutMapping("/{id}")
+    public Task updateTasks(@PathVariable Long id, @RequestBody Task updatedTask) {
+        for (int i = 0; i < tasks.size(); i++) {
+            Task task = tasks.get(i);
+            if (task.getId().equals(id)) {
+                updatedTask.setId(id);
+                updatedTask.setCreatedAt(task.getCreatedAt());
+                tasks.set(i, updatedTask);
+                return updatedTask;
+            }
+        }
+        return null;
+    }
+
+    // Delete
+    @DeleteMapping("/{id}")
+    public void deleteTask(@PathVariable Long id) {
+        tasks.removeIf(task -> task.getId().equals(id));
+    }
+
+
 }
