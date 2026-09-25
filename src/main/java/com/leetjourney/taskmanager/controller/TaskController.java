@@ -1,6 +1,10 @@
 package com.leetjourney.taskmanager.controller;
 
 import com.leetjourney.taskmanager.entity.Task;
+import com.leetjourney.taskmanager.repository.TaskRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -12,54 +16,59 @@ import java.util.List;
 @RequestMapping("/api/v1/tasks")
 public class TaskController {
 
-    // Temporary in-memory task list
-    private final List<Task> tasks = new ArrayList<>();
-    private Long nextId = 1L;
+    // Singleton - Bean managed by Spring, can be injected as constructor to use
+    private final TaskRepository taskRepository;
+
+    /* Constructor injection (when Spring provides a bean's required dependencies through its contructor
+    *  ensuring the object is fully initialized and immutable at creation */
+    public TaskController(TaskRepository taskRepository) {
+        this.taskRepository = taskRepository;
+    }
 
     @GetMapping
     public List<Task> getAllTasks() {
-        return tasks;
+        return taskRepository.findAll();
     }
 
     // @PathVariable means "get a value from the URL path and give it to my Java method."
     @GetMapping("/{id}")
-    public Task getTaskById(@PathVariable Long id) {
-        // Using stream to find task or return null
-        return tasks.stream().filter(task -> task.getId().equals(id)).findFirst().orElse(null);
-
+    public ResponseEntity<Task> getTaskById(@PathVariable Long id) {
+        return taskRepository.findById(id)
+                .map(ResponseEntity::ok) // If task exists, return HTTP 200 with the task
+                .orElse(ResponseEntity.notFound().build()); // Else return HTTP 404
     }
 
     // CRUD - Create, read, update, delete
     // RequestBody - tells spring to cover the JSON in request body to Task object (Auto JSON parsing)
     @PostMapping // Handles HTTP post requests
-    public Task createTask(@RequestBody Task task) {
-        task.setId(nextId++);
-        task.setCreatedAt(LocalDateTime.now());
-        task.setCompleted(false);
-        tasks.add(task);
-
-        return task;
+    public ResponseEntity<Task> createTask(@RequestBody Task task) {
+        Task savedTask = taskRepository.save(task); // save task to db
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedTask); // Tell client Task was successfully created
     }
 
     // Update
     @PutMapping("/{id}")
-    public Task updateTasks(@PathVariable Long id, @RequestBody Task updatedTask) {
-        for (int i = 0; i < tasks.size(); i++) {
-            Task task = tasks.get(i);
-            if (task.getId().equals(id)) {
-                updatedTask.setId(id);
-                updatedTask.setCreatedAt(task.getCreatedAt());
-                tasks.set(i, updatedTask);
-                return updatedTask;
-            }
-        }
-        return null;
+    public ResponseEntity<Task> updateTasks(@PathVariable Long id, @RequestBody Task updatedTask) {
+        return taskRepository.findById(id)
+                .map(task -> {
+                    task.setTitle(updatedTask.getTitle());
+                    task.setDescription(updatedTask.getDescription());
+                    task.setCompleted(updatedTask.getCompleted());
+                    Task savedTask = taskRepository.save(task);
+                    return ResponseEntity.ok(savedTask);
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 
     // Delete
     @DeleteMapping("/{id}")
-    public void deleteTask(@PathVariable Long id) {
-        tasks.removeIf(task -> task.getId().equals(id));
+    public ResponseEntity<Void> deleteTask(@PathVariable Long id) {
+        return taskRepository.findById(id)
+                .map(task -> {
+                    taskRepository.delete(task);
+                    return ResponseEntity.ok().<Void>build();
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 
 
