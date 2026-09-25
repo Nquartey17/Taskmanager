@@ -29,10 +29,8 @@ public class TaskController {
 
     // @PathVariable means "get a value from the URL path and give it to my Java method."
     @GetMapping("/{id}")
-    public ResponseEntity<Task> getTaskById(@PathVariable Long id) {
-        return taskService.getTaskById(id)
-                .map(ResponseEntity::ok) // If task exists, return HTTP 200 with the task
-                .orElse(ResponseEntity.notFound().build()); // Else return HTTP 404
+    public Task getTaskById(@PathVariable Long id) {
+        return taskService.getTaskById(id);
     }
 
     // CRUD - Create, read, update, delete
@@ -45,16 +43,15 @@ public class TaskController {
 
     // Update
     @PutMapping("/{id}")
-    public ResponseEntity<Task> updateTasks(@PathVariable Long id, @RequestBody Task updatedTask) {
-        return taskService.updateTask(id, updatedTask)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public Task updateTasks(@PathVariable Long id, @RequestBody Task updatedTask) {
+        return taskService.updateTask(id, updatedTask);
     }
 
     // Delete
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTask(@PathVariable Long id) {
-        return taskService.deleteTask(id) ? ResponseEntity.ok().build() : ResponseEntity.notFound().build();
+        taskService.deleteTask(id);
+        return ResponseEntity.ok().build(); //Tell user task was deleted which is why responseEntity needs to be returned
     }
 
     @GetMapping("/completed/{status}")
