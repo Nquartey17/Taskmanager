@@ -2,6 +2,7 @@ package com.leetjourney.taskmanager.controller;
 
 import com.leetjourney.taskmanager.entity.Task;
 import com.leetjourney.taskmanager.service.TaskService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -35,15 +36,16 @@ public class TaskController {
 
     // CRUD - Create, read, update, delete
     // RequestBody - tells spring to cover the JSON in request body to Task object (Auto JSON parsing)
+    // @Valid before Requestbody to validate annotations in Task.java
     @PostMapping // Handles HTTP post requests
-    public ResponseEntity<Task> createTask(@RequestBody Task task) {
+    public ResponseEntity<Task> createTask(@Valid @RequestBody Task task) {
         Task savedTask = taskService.createTask(task); // save task to db
         return ResponseEntity.status(HttpStatus.CREATED).body(savedTask); // Tell client Task was successfully created
     }
 
     // Update
     @PutMapping("/{id}")
-    public Task updateTasks(@PathVariable Long id, @RequestBody Task updatedTask) {
+    public Task updateTasks(@PathVariable Long id, @Valid @RequestBody Task updatedTask) {
         return taskService.updateTask(id, updatedTask);
     }
 
