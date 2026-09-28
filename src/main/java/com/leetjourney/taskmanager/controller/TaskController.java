@@ -1,5 +1,7 @@
 package com.leetjourney.taskmanager.controller;
 
+import com.leetjourney.taskmanager.dto.TaskRequest;
+import com.leetjourney.taskmanager.dto.TaskResponse;
 import com.leetjourney.taskmanager.entity.Task;
 import com.leetjourney.taskmanager.service.TaskService;
 import jakarta.validation.Valid;
@@ -30,7 +32,7 @@ public class TaskController {
 
     // @PathVariable means "get a value from the URL path and give it to my Java method."
     @GetMapping("/{id}")
-    public Task getTaskById(@PathVariable Long id) {
+    public TaskResponse getTaskById(@PathVariable Long id) {
         return taskService.getTaskById(id);
     }
 
@@ -38,14 +40,14 @@ public class TaskController {
     // RequestBody - tells spring to cover the JSON in request body to Task object (Auto JSON parsing)
     // @Valid before Requestbody to validate annotations in Task.java
     @PostMapping // Handles HTTP post requests
-    public ResponseEntity<Task> createTask(@Valid @RequestBody Task task) {
-        Task savedTask = taskService.createTask(task); // save task to db
+    public ResponseEntity<TaskResponse> createTask(@Valid @RequestBody TaskRequest task) {
+        TaskResponse savedTask = taskService.createTask(task); // save task to db
         return ResponseEntity.status(HttpStatus.CREATED).body(savedTask); // Tell client Task was successfully created
     }
 
     // Update
     @PutMapping("/{id}")
-    public Task updateTasks(@PathVariable Long id, @Valid @RequestBody Task updatedTask) {
+    public TaskResponse updateTasks(@PathVariable Long id, @Valid @RequestBody TaskRequest updatedTask) {
         return taskService.updateTask(id, updatedTask);
     }
 

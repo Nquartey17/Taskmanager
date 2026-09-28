@@ -1,8 +1,11 @@
 package com.leetjourney.taskmanager.service;
 
 
+import com.leetjourney.taskmanager.dto.TaskRequest;
+import com.leetjourney.taskmanager.dto.TaskResponse;
 import com.leetjourney.taskmanager.entity.Task;
 import com.leetjourney.taskmanager.exception.TaskNotFoundException;
+import com.leetjourney.taskmanager.mapper.TaskMapper;
 import com.leetjourney.taskmanager.repository.TaskRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
@@ -14,31 +17,34 @@ import java.util.List;
 public class TaskService {
 
     private final TaskRepository taskRepository;
+    private final TaskMapper taskMapper;
 
-    public TaskService(TaskRepository taskRepository) {
+    public TaskService(TaskRepository taskRepository, TaskMapper taskMapper) {
         this.taskRepository = taskRepository;
+        this.taskMapper = taskMapper;
     }
 
     public List<Task> getAllTasks() {
         return taskRepository.findAll();
     }
 
-    public Task getTaskById(Long id) { // Optional means this can return null
-        return taskRepository.findById(id)
+    public TaskResponse getTaskById(Long id) { // Optional means this can return null
+        Task retrievedTask = taskRepository.findById(id)
                 .orElseThrow(() -> new TaskNotFoundException(id));
+        return taskMapper.toResponse(retrievedTask);
     }
 
-    public Task createTask(Task task) {
-        return taskRepository.save(task);
+    public TaskResponse createTask(TaskRequest task) {
+        Task entityTask = taskMapper.toEntity(task);
+        Task savedTask = taskRepository.save(entityTask);
+        return taskMapper.toResponse(savedTask);
     }
 
-    public Task updateTask(Long id, Task updatedTask) {
+    public TaskResponse updateTask(Long id, TaskRequest updatedTask) {
         Task task = taskRepository.findById(id)
                         .orElseThrow(() -> new TaskNotFoundException(id));
-        task.setTitle(updatedTask.getTitle());
-        task.setDescription(updatedTask.getDescription());
-        task.setCompleted(updatedTask.getCompleted());
-        return taskRepository.save(task);
+        taskMapper.updateEntityFromRequest(task, updatedTask);
+        return taskMapper.toResponse(taskRepository.save(task));
 
     }
 
